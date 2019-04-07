@@ -5,62 +5,39 @@ import matplotlib.pyplot as plt
 
 
 
-def quantumwalk(steps, cstate, pos):
+def quantumwalk(steps, pos):
     #factor
-    f = 1
+    f = 2
     t = 0
     # Initialise matrices
-    k = np.zeros((steps, 2**(steps+1)),dtype=np.complex_) if cstate == -1 else np.zeros((steps, 2**steps),dtype=np.complex_)
-    z = np.zeros((steps, 2**(steps+1))) if cstate == -1 else np.zeros((steps, 2**steps))
-    y = np.zeros((steps, 2**(steps+1))) if cstate == -1 else np.zeros((steps, 2**steps))
+    k = np.zeros((steps, 2**(steps+1)),dtype=np.complex_)
+    z = np.zeros((steps, 2**(steps+1)))
+    y = np.zeros((steps, 2**(steps+1)))
     # Hadamard rotation
     # asymmetrical coin
     a = 1/math.sqrt(2)
     b = 1/math.sqrt(2)
     c = 1/math.sqrt(2)
     d = -1/math.sqrt(2)
-    # symmetrical coin
-    a_s = 1/math.sqrt(2)
-    b_s = 1j/math.sqrt(2)
-    c_s = 1j/math.sqrt(2)
-    d_s = 1/math.sqrt(2)
-    
-    #comment this part out if asymetrical coin is preferred
-    """
-    a = a_s
-    b = b_s
-    c = c_s
-    d = d_s
-    """
+
     for r in xrange(steps):
-        if cstate == -1:
-            f = 2
-        for s in xrange(2**(r+f)):
+        for s in xrange(2**(r+2)):
             # Setting the coin states for all position states of the particle/walker
             if (s+1) % 2==0: #if the position is even
                 y[r][s] = 1
             else:
                 y[r][s] = 0
-            # Setting the complex conjugates of the initial position states
-            if r==0: #if it is the first iteration of the outer loop
-                if cstate==0: #if the initial state of coin is 0
-                    if s==0: #The very first element of the matrix
-                        k[r][s] = a # it will have value a
-                    else:  
-                        k[r][s] = b
-                elif cstate == -1:
-                    if s==0: #The very first element of the matrix
-                        k[r][s] = a*1j/math.sqrt(2) # it will have value a
-                    elif s==1:
-                        k[r][s] = b*1j/math.sqrt(2)
-                    elif s==2: 
-                        k[r][s] = c*1/math.sqrt(2)
-                    else:
-                        k[r][s] = d*1/math.sqrt(2)
-                elif s==0: #if the initial state of coin is 1
-                    k[r][s] = c #The very first element of the matrix will have value c
+            # Complex conjugate assignment:
+            # -Only for the first iteration(edge case)
+            if r==0: 
+                if s==0: 
+                    k[r][s] = a*1j/math.sqrt(2)
+                elif s==1:
+                    k[r][s] = b*1j/math.sqrt(2)
+                elif s==2: 
+                    k[r][s] = c*1/math.sqrt(2)
                 else:
-                    k[r][s] = d #the rest of the elt in the row will have value d
+                    k[r][s] = d*1/math.sqrt(2)
             else: #If it is not the first iteration 
                 t=t+1
             if t==1: #coin flip transition
@@ -83,55 +60,55 @@ def quantumwalk(steps, cstate, pos):
                 z[r][s]=z[r-1][int(round(s/2))]-1
             else:
                 z[r][s]=z[r-1][int(round(s/2))]+1
-    """ -----DEBUG-----"""
+    """ -----DEBUG-----
     print('y is')
     print(y)
     print('k is')
     print(k)
     print('z is')
     print(z)
-    """-----"""
+    -----"""
     # m is the number of times the element has repeatedly appeared
     # bin is the corresponding index(starting from 1) of the element in array m
     [m, _bin] = histc(z[steps-1][:], np.unique(z[steps-1][:]))
     
     
     
-    """-----DEBUG-----"""
+    """-----DEBUG-----
     print('the last row of z is :')
     print(z[steps-1][:])
     print('m is')
     print(m)
     print('_bin is')
     print(_bin)
-    """-----"""
+    -----"""
     
     multiplez= indices(m, lambda x: x > 1) #m[np.where(m>1)]
     
-    """-----DEBUG-----"""
+    """-----DEBUG-----
     print('multiplez is')
     print(multiplez)
-    """-----"""
+    -----"""
     
     indexz = indices(ismember(_bin,multiplez+1), lambda x: x != 0)
     
     #number of position states in the last row of z
     nz = len(indexz)
     
-    """-----DEBUG-----"""
+    """-----DEBUG-----
     print("indexz")
     print(indexz)
     print("nz is %s" %nz)
-    """-----"""
+    -----"""
     
     if indexz.ndim > 1:
         bz = len(indexz[0])
     else:
         bz = 1
     
-    """-----DEBUG-----"""
+    """-----DEBUG-----
     print("bz is %s " %bz)
-    """-----"""
+    -----"""
     
     mz = len(multiplez)
     if multiplez.ndim > 1:
@@ -139,14 +116,14 @@ def quantumwalk(steps, cstate, pos):
     else:
         bz = 1
     #this assumes that the first and the last position state is not superposed
-    rz = 0 #was 2
-    zz = np.zeros((steps,2**(steps+1))) if cstate == -1 else np.zeros((steps,2**steps))
+    rz = 0 
+    zz = np.zeros((steps,2**(steps+1)))
     #zz[steps-1][0] = z[steps-1][0]
     #zz[steps-1][1] = z[steps-1][2**steps-1]
-    yy = np.zeros((steps,2**(steps+1))) if cstate == -1 else np.zeros((steps,2**steps))
+    yy = np.zeros((steps,2**(steps+1)))
     #yy[steps-1][0]=y[steps-1][0]
     #yy[steps-1][1]=y[steps-1][2**steps-1]
-    kk = np.zeros((steps,2**(steps+1)),dtype=np.complex_) if cstate == -1 else np.zeros((steps,2**steps),dtype=np.complex_)
+    kk = np.zeros((steps,2**(steps+1)),dtype=np.complex_)
     #kk[steps-1][0]=k[steps-1][0]
     #kk[steps-1][1]=k[steps-1][2**steps-1]
     rz1=rz
@@ -162,26 +139,26 @@ def quantumwalk(steps, cstate, pos):
     
     kkz = []
     
-    """-----DEBUG-----"""
+    """-----DEBUG-----
     print("kk")
     print(kk)
     print('mz is %s' %mz)
-    """-----"""
+    -----"""
     
     for i in xrange(mz):
-        indexz1 = indices(ismember(_bin, multiplez[i]+1), lambda x: x != 0)#find(ismember(_bin, multiplez[i]))
+        indexz1 = indices(ismember(_bin, multiplez[i]+1), lambda x: x != 0)
         
-        """-----DEBUG-----"""
+        """-----DEBUG-----
         print("indexz1")
         print(indexz1)
-        """-----"""
+        -----"""
         
         kkz.append(z[steps-1][indexz1[0]])#was indexz1[i]
     
-    """-----DEBUG-----"""
+    """-----DEBUG-----
     print("kkz")
     print(kkz) # is the pos value that have multiple coefficients
-    """-----"""
+    -----"""
     
     for i in xrange(mz):
         for j in range(rz, 2**(steps+1)):
@@ -205,18 +182,18 @@ def quantumwalk(steps, cstate, pos):
         qk=0
         rzz+=1
     
-    """-----DEBUG-----"""
+    """-----DEBUG-----
     print('zz is')
     print(zz) #only the first mz has real meaning
-    """-----"""
+    -----"""
     
     print('Output state:')
     p = 0
-    k2 = np.zeros((steps,(steps+1)*2),dtype=np.complex_) if cstate==-1 else np.zeros((steps,steps*2),dtype=np.complex_)
+    k2 = np.zeros((steps,(steps+1)*2),dtype=np.complex_)
     
-    """-----DEBUG-----"""
+    """-----DEBUG-----
     print('rzz is %s' %rzz)
-    """-----"""
+    -----"""
     
     for s in xrange(rzz):
         print('%1.2f + %1.2fj |%1.0f,%1.0f>'%(kk[steps-2][s].real,kk[steps-2][s].imag,zz[steps-2][s],yy[steps-2][s]))
@@ -232,9 +209,9 @@ def quantumwalk(steps, cstate, pos):
     kkz=rz
     nrzz=(rzz-2)/2+1
     
-    """-----DEBUG-----"""
+    """-----DEBUG-----
     print('nrzz is %s' %nrzz)
-    """-----"""
+    -----"""
     pzz = np.zeros((steps,nrzz))
     #pzz[steps-1][0]=zz[steps-2][0] #assuming the starting state and ending state are not superposed by any other waves
     #pzz[steps-1][nrzz-1]=zz[steps-2][1]
@@ -282,12 +259,11 @@ def indices(a, func):
 def main():
     print('Number of steps:')
     steps = input()
-    print('Initial coin state: ')
-    cstate = input()
     print('Initial position: ')
     pos = input()
-    print('Initial State and Position: |%1.0f,%1.0f>\n' % (cstate,pos))
-    quantumwalk(steps,cstate,pos)
+    print('Initial state to achieve symmetric walk is prepared for you.')
+    #print('Initial State and Position: |%1.0f,%1.0f>\n' % (cstate,pos))
+    quantumwalk(steps,pos)
 
 if __name__ == "__main__":
     main()
