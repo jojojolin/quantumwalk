@@ -6,19 +6,13 @@ import matplotlib.pyplot as plt
 
 
 def quantumwalk(steps, pos):
-    #factor
-    f = 2
     t = 0
     # Initialise matrices
     k = np.zeros((steps, 2**(steps+1)),dtype=np.complex_)
     z = np.zeros((steps, 2**(steps+1)))
     y = np.zeros((steps, 2**(steps+1)))
-    # Hadamard rotation
-    # asymmetrical coin
-    a = 1/math.sqrt(2)
-    b = 1/math.sqrt(2)
-    c = 1/math.sqrt(2)
-    d = -1/math.sqrt(2)
+    # Hadamard coin(asymm)
+    h = [[1/math.sqrt(2),1/math.sqrt(2)],[1/math.sqrt(2),-1/math.sqrt(2)]]
 
     for r in xrange(steps):
         for s in xrange(2**(r+2)):
@@ -28,26 +22,26 @@ def quantumwalk(steps, pos):
             else:
                 y[r][s] = 0
             # Complex conjugate assignment:
-            # -Only for the first iteration(edge case)
+            # Only for the first iteration(edge case)
             if r==0: 
                 if s==0: 
-                    k[r][s] = a*1j/math.sqrt(2)
+                    k[r][s] = h[0][0]*1j/math.sqrt(2)
                 elif s==1:
-                    k[r][s] = b*1j/math.sqrt(2)
+                    k[r][s] = h[0][1]*1j/math.sqrt(2)
                 elif s==2: 
-                    k[r][s] = c*1/math.sqrt(2)
+                    k[r][s] = h[1][0]*1/math.sqrt(2)
                 else:
-                    k[r][s] = d*1/math.sqrt(2)
+                    k[r][s] = h[1][1]*1/math.sqrt(2)
             else: #If it is not the first iteration 
                 t=t+1
             if t==1: #coin flip transition
-                k[r][s] = a*k[r-1][int(round(s/2))]#a*previous step's coefficients
+                k[r][s] = h[0][0]*k[r-1][int(round(s/2))]
             elif t==2:
-                k[r][s] = b*k[r-1][int(round(s/2))]
+                k[r][s] = h[0][1]*k[r-1][int(round(s/2))]
             elif t==3:
-                k[r][s] = c*k[r-1][int(round(s/2))]
+                k[r][s] = h[1][0]*k[r-1][int(round(s/2))]
             elif t==4:
-                k[r][s] = d*k[r-1][int(round(s/2))]
+                k[r][s] = h[1][1]*k[r-1][int(round(s/2))]
             	
             if t==4:# Reset
                 t=0
@@ -83,7 +77,7 @@ def quantumwalk(steps, pos):
     print(_bin)
     -----"""
     
-    multiplez= indices(m, lambda x: x > 1) #m[np.where(m>1)]
+    multiplez= indices(m, lambda x: x > 1)
     
     """-----DEBUG-----
     print('multiplez is')
@@ -92,7 +86,7 @@ def quantumwalk(steps, pos):
     
     indexz = indices(ismember(_bin,multiplez+1), lambda x: x != 0)
     
-    #number of position states in the last row of z
+    # Number of position states in the last row of z
     nz = len(indexz)
     
     """-----DEBUG-----
@@ -115,20 +109,13 @@ def quantumwalk(steps, pos):
         bz = len(multiplez[0])
     else:
         bz = 1
-    #this assumes that the first and the last position state is not superposed
     rz = 0 
     zz = np.zeros((steps,2**(steps+1)))
-    #zz[steps-1][0] = z[steps-1][0]
-    #zz[steps-1][1] = z[steps-1][2**steps-1]
     yy = np.zeros((steps,2**(steps+1)))
-    #yy[steps-1][0]=y[steps-1][0]
-    #yy[steps-1][1]=y[steps-1][2**steps-1]
     kk = np.zeros((steps,2**(steps+1)),dtype=np.complex_)
-    #kk[steps-1][0]=k[steps-1][0]
-    #kk[steps-1][1]=k[steps-1][2**steps-1]
     rz1=rz
     
-    for r in xrange(2**(steps+1)): #was in range(1,2**steps-1)
+    for r in xrange(2**(steps+1)):
         zz[steps-1][rz1] =z[steps-1][r]
         yy[steps-1][rz1] =y[steps-1][r]
         kk[steps-1][rz1] =k[steps-1][r]
@@ -153,7 +140,7 @@ def quantumwalk(steps, pos):
         print(indexz1)
         -----"""
         
-        kkz.append(z[steps-1][indexz1[0]])#was indexz1[i]
+        kkz.append(z[steps-1][indexz1[0]])
     
     """-----DEBUG-----
     print("kkz")
@@ -164,13 +151,10 @@ def quantumwalk(steps, pos):
         for j in range(rz, 2**(steps+1)):
             if yy[steps-1][j]==0:
                 if zz[steps-1][j]==kkz[i]:
-                    #pk+=abs(kk[steps-1][j].imag)*1j+abs(kk[steps-1][j].real)
                     pk+=kk[steps-1][j] #probability of the same position and coin state(0)
             elif yy[steps-1][j]==1:
                 if zz[steps-1][j]==kkz[i]:
-                    #qk+=abs(kk[steps-1][j].imag)*1j+abs(kk[steps-1][j].real)
                     qk+=kk[steps-1][j] #probability of the same position and coin state(1)
-        #From here onwards, change the row from steps-1 to steps-2 for all zz, yy, kk
         zz[steps-2][rzz]=kkz[i]# position state
         yy[steps-2][rzz]=0 #coin state
         kk[steps-2][rzz]=pk
@@ -187,7 +171,7 @@ def quantumwalk(steps, pos):
     print(zz) #only the first mz has real meaning
     -----"""
     
-    print('Output state:')
+    print('States after %s iterations of Coin-flip and Shift transformation:' % steps)
     p = 0
     k2 = np.zeros((steps,(steps+1)*2),dtype=np.complex_)
     
@@ -197,15 +181,19 @@ def quantumwalk(steps, pos):
     
     for s in xrange(rzz):
         print('%1.2f + %1.2fj |%1.0f,%1.0f>'%(kk[steps-2][s].real,kk[steps-2][s].imag,zz[steps-2][s],yy[steps-2][s]))
-        k2[steps-1][s]=abs(kk[steps-2][s])**2
-        print('squared')
-        print(k2[steps-1][s])
+        k2[steps-1][s]=abs(kk[steps-2][s])**2 #calculate probability
         p=p+k2[steps-1][s]
 
 
-
     #Presenting the outcome 
-    print('Total Probability = %1.4f + %1.4fj' % (p.real, p.imag))
+    print('\nTotal Probability = %1.4f + %1.4fj\n' % (p.real, p.imag))
+    
+    print('Normalisation check:')
+    if round(p.real)==1 and round(p.imag)==0:
+        print("true\n")
+    else:
+        print("false, p=%s\n"% abs(p))
+        
     kkz=rz
     nrzz=(rzz-2)/2+1
     
@@ -213,23 +201,17 @@ def quantumwalk(steps, pos):
     print('nrzz is %s' %nrzz)
     -----"""
     pzz = np.zeros((steps,nrzz))
-    #pzz[steps-1][0]=zz[steps-2][0] #assuming the starting state and ending state are not superposed by any other waves
-    #pzz[steps-1][nrzz-1]=zz[steps-2][1]
     pk2 = np.zeros((steps,nrzz))
-    #pk2[steps-1][0]=abs(kk[steps-2][0])**2	
-    #pk2[steps-1][nrzz-1]=abs(kk[steps-2][1])**2
 
-    for s in xrange(nrzz):#was range(1,nrzz-1)
+    for s in xrange(nrzz):
         kkz = kkz+1
         pzz[steps-1][s]=zz[steps-2][kkz-1]
-        pk2[steps-1][s]=abs(kk[steps-2][kkz-1])**2 +abs(kk[steps-2][kkz])**2 #sum of probabilities of the same position state, disregarding the coinstateq
+        pk2[steps-1][s]=abs(kk[steps-2][kkz-1])**2 +abs(kk[steps-2][kkz])**2 #sum of probabilities of the same position state, disregarding the coin-state
         kkz=kkz+1
   
-
-    print('The probability at any position: ')
-    print('=================================')
-    print('Position Probability')
-    print('---------------------------------')
+    print('+=================================+')
+    print('|Position Probability Distribution|')
+    print('+---------------------------------+')
     
     for s in xrange(nrzz):
         print(' %1.0f %1.8f'%(pzz[steps-1][s],pk2[steps-1][s]))
@@ -261,9 +243,16 @@ def main():
     steps = input()
     print('Initial position: ')
     pos = input()
-    print('Initial state to achieve symmetric walk is prepared for you.')
-    #print('Initial State and Position: |%1.0f,%1.0f>\n' % (cstate,pos))
-    quantumwalk(steps,pos)
+    print('Special initial state required for a symmetric walk is prepared for you:')
+    print('i/sqrt(2)|%1.0f,0> + 1/sqrt(2)|%1.0f,1>\n' % (pos,pos) )
+    # Catch for edge case
+    if steps == 0:
+        print('+=================================+')
+        print('|Position Probability Distribution|')
+        print('+---------------------------------+')
+        print(' %1.0f %1.8f'%(pos,1))
+    else:
+        quantumwalk(steps,pos)
 
 if __name__ == "__main__":
     main()

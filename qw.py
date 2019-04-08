@@ -6,29 +6,20 @@ import matplotlib.pyplot as plt
 
 
 def quantumwalk(steps, cstate, pos):
-    t = 0
+    t = 0 #counter
     # Initialise matrices
-    k = np.zeros((steps, 2**steps),dtype=np.complex_)
-    z = np.zeros((steps, 2**steps))
-    y = np.zeros((steps, 2**steps))
-    # Hadamard rotation
-    # asymmetrical coin
-    a = 1/math.sqrt(2)
-    b = 1/math.sqrt(2)
-    c = 1/math.sqrt(2)
-    d = -1/math.sqrt(2)
-    # symmetrical coin
-    a_s = 1/math.sqrt(2)
-    b_s = 1j/math.sqrt(2)
-    c_s = 1j/math.sqrt(2)
-    d_s = 1/math.sqrt(2)
+    k = np.zeros((steps, 2**steps),dtype=np.complex_)#complex projective space
+    z = np.zeros((steps, 2**steps)) #position space
+    y = np.zeros((steps, 2**steps)) #coin space
     
-    #comment this part out if asymetrical coin is preferred
+    # Hadamard coin (asymm)
+    h = [[1/math.sqrt(2),1/math.sqrt(2)],[1/math.sqrt(2),-1/math.sqrt(2)]]
+    # Grover's coin (symm)
+    g = [[1/math.sqrt(2),1j/math.sqrt(2)],[1j/math.sqrt(2),1/math.sqrt(2)]]
+    
+    # Uncomment this part if symmetrical coin is preferred
     """
-    a = a_s
-    b = b_s
-    c = c_s
-    d = d_s
+    h = g
     """
     for r in xrange(steps):
         for s in xrange(2**(r+1)):
@@ -41,23 +32,23 @@ def quantumwalk(steps, cstate, pos):
             if r==0: #if it is the first iteration of the outer loop
                 if cstate==0: #if the initial state of coin is 0
                     if s==0: #The very first element of the matrix
-                        k[r][s] = a # it will have value a
-                    else:  
-                        k[r][s] = b
+                        k[r][s] = h[0][0] # it will have value a
+                    else:
+                        k[r][s] = h[0][1]
                 elif s==0: #if the initial state of coin is 1
-                    k[r][s] = c #The very first element of the matrix will have value c
+                    k[r][s] = h[1][0] #The very first element of the matrix will have value c
                 else:
-                    k[r][s] = d #the rest of the elt in the row will have value d
+                    k[r][s] = h[1][1] #the rest of the elt in the row will have value d
             else: #If it is not the first iteration 
                 t=t+1
             if t==1: #coin flip transition
-                k[r][s] = a*k[r-1][int(round(s/2))]#a*previous step's coefficients
+                k[r][s] = h[0][0]*k[r-1][int(round(s/2))]
             elif t==2:
-                k[r][s] = b*k[r-1][int(round(s/2))]
+                k[r][s] = h[0][1]*k[r-1][int(round(s/2))]
             elif t==3:
-                k[r][s] = c*k[r-1][int(round(s/2))]
+                k[r][s] = h[1][0]*k[r-1][int(round(s/2))]
             elif t==4:
-                k[r][s] = d*k[r-1][int(round(s/2))]
+                k[r][s] = h[1][1]*k[r-1][int(round(s/2))]
             	
             if t==4:# Reset
                 t=0
@@ -172,11 +163,9 @@ def quantumwalk(steps, cstate, pos):
         for j in range(rz, 2**steps):
             if yy[steps-1][j]==0:
                 if zz[steps-1][j]==kkz[i]:
-                    #pk+=abs(kk[steps-1][j].imag)*1j+abs(kk[steps-1][j].real)
                     pk+=kk[steps-1][j]
             elif yy[steps-1][j]==1:
                 if zz[steps-1][j]==kkz[i]:
-                    #qk+=abs(kk[steps-1][j].imag)*1j+abs(kk[steps-1][j].real)
                     qk+=kk[steps-1][j]
         zz[steps-1][rzz]=kkz[i]
         yy[steps-1][rzz]=0
@@ -194,7 +183,7 @@ def quantumwalk(steps, cstate, pos):
     print(zz)
     -----"""
     
-    print('Output state:')
+    print('States after %s iterations of Coin-flip and Shift transformation:' % steps)
     p = 0
     k2 = np.zeros((steps,steps*2),dtype=np.complex_)
     
@@ -204,15 +193,17 @@ def quantumwalk(steps, cstate, pos):
     
     for s in xrange(rzz):
         print('%1.2f + %1.2fj |%1.0f,%1.0f>'%(kk[steps-1][s].real,kk[steps-1][s].imag,zz[steps-1][s],yy[steps-1][s]))
-        k2[steps-1][s]=(kk[steps-1][s])**2
-        print('squared')
-        print(k2[steps-1][s])
+        k2[steps-1][s]=(kk[steps-1][s])**2 #calculate probability
         p=p+k2[steps-1][s]
 
-
-
     #Presenting the outcome 
-    print('Total Probability = %1.4f + %1.4fj' % (p.real, p.imag))
+    print('\nTotal Probability = %1.4f + %1.4fj \n' % (p.real, p.imag))
+    print('Normalisation check:')
+    
+    if round(p.real)==1 and round(p.imag)==0:
+        print("true\n")
+    else:
+        print("false, p=%s\n"% abs(p))
     kkz=rz
     nrzz=(rzz-2)/2+2
     
@@ -233,10 +224,9 @@ def quantumwalk(steps, cstate, pos):
         kkz=kkz+1
   
 
-    print('The probability at any position: ')
-    print('=================================')
-    print('Position Probability')
-    print('---------------------------------')
+    print('+=================================+')
+    print('|Position Probability Distribution|')
+    print('+---------------------------------+')
     
     for s in xrange(nrzz):
         print(' %1.0f %1.8f'%(pzz[steps-1][s],pk2[steps-1][s]))
@@ -270,8 +260,15 @@ def main():
     cstate = input()
     print('Initial position: ')
     pos = input()
-    print('Initial State and Position: |%1.0f,%1.0f>\n' % (cstate,pos))
-    quantumwalk(steps,cstate,pos)
+    print('Localise the particle to state: |%1.0f,%1.0f>\n' % (pos,cstate))
+    # Catch for edge case
+    if steps == 0:
+        print('+=================================+')
+        print('|Position Probability Distribution|')
+        print('+---------------------------------+')
+        print(' %1.0f %1.8f'%(pos,1))
+    else:
+        quantumwalk(steps,cstate,pos)
 
 if __name__ == "__main__":
     main()
