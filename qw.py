@@ -14,6 +14,8 @@ def quantumwalk(steps, cstate, pos):
     
     # Hadamard coin (asymm)
     h = [[1/math.sqrt(2),1/math.sqrt(2)],[1/math.sqrt(2),-1/math.sqrt(2)]]
+    
+
     # Grover's coin (symm)
     g = [[1/math.sqrt(2),1j/math.sqrt(2)],[1j/math.sqrt(2),1/math.sqrt(2)]]
     
@@ -29,7 +31,7 @@ def quantumwalk(steps, cstate, pos):
             else:
                 y[r][s] = 0
             # Setting the complex conjugates of the initial position states
-            if r==0: #if it is the first iteration of the outer loop
+            if r==0: #if it is the first iteration
                 if cstate==0: #if the initial state of coin is 0
                     if s==0: #The very first element of the matrix
                         k[r][s] = h[0][0] # it will have value a
